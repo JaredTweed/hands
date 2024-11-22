@@ -5,6 +5,8 @@
   <meta charset="UTF-8">
   <title>Hand Detection</title>
 
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+
   <!-- Preload fonts -->
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" as="style"
     onload="this.onload=null;this.rel='stylesheet'">
@@ -14,7 +16,7 @@
   <!-- Include Socket.IO client library -->
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 
-  <script src="https://js.stripe.com/v3/"></script>
+  <!-- <script src="https://js.stripe.com/v3/"></script> -->
 
 
 
@@ -30,14 +32,36 @@
     }
 
     #app-container {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      margin-left: 10px;
+      margin-right: 10px;
+      /* change width to 600 */
       width: 640px;
       text-align: center;
-      gap: 20px;
+      align-items: center;
+      gap: 15px;
+      /* margin: 0; */
+      /* border: 2px solid black; */
+    }
+
+    #app-container>* {
+      width: 100%;
+      box-sizing: border-box;
+      /* Ensure padding and borders are included in the width */
+      margin: 0;
+      /* Reset any margin that might add extra space */
+    }
+
+    #title {
+      /* border: 2px solid black; */
+      padding: 0;
     }
 
     img {
+      margin: 0;
       border: 2px solid black;
-      width: 600px;
       height: 450px;
       background-color: black;
       border-radius: 30px;
@@ -47,36 +71,57 @@
     .slider-container {
       border: 2px solid black;
       border-radius: 30px;
-      gap: 10px;
-      font-family: 'Inter', Arial, sans-serif;
-      margin: 20px;
+      height: 30px;
+      font-family: Poppins, Montserrat, Arial, sans-serif;
       box-shadow: 10px 10px 15px rgba(0, 0, 0, 0.4);
       background-color: white;
+      position: relative;
+      padding: 0;
     }
 
     .slider {
-      width: 300px;
+      position: absolute;
+      left: 145px;
+      right: 68px;
       height: 8px;
+      bottom: 40%;
+      transform: translate(0, 50%);
       border-radius: 5px;
       outline: none;
       border: none;
       cursor: pointer;
-      margin: 10px;
+    }
+
+    label {
+      position: absolute;
+      left: 10px;
+    }
+
+    .slider-value {
+      position: absolute;
+      right: 10px;
     }
 
     .slider-value,
     label {
       font-weight: 700;
-      font-size: 1rem;
+      font-size: 16px;
+      font-family: Poppins, Montserrat, Arial, sans-serif;
     }
 
     #donate-button {
       background-color: rgb(0, 0, 0);
-      width: 600px;
-      height: 80px;
+      /* width: 600px; */
+      height: 90px;
       border-color: transparent;
       font-size: 25px;
+      font-weight: 700;
+      border-radius: 30px;
+      margin: 0;
       color: white;
+      font-family: Poppins, Montserrat, Arial, sans-serif;
+      box-shadow: 10px 10px 15px rgba(0, 0, 0, 0.4);
+      position: relative;
     }
 
     #donate-button:hover {
@@ -92,19 +137,18 @@
       cursor: pointer;
     }
 
-
-
     a {
       color: black;
+      font-family: Poppins, Montserrat, Arial, sans-serif;
     }
   </style>
 </head>
 
 <body>
   <div id="app-container">
-    <div>
+    <div id="title">
       <h1 style="margin-bottom: 0;">Hand Detection App</h1>
-      <p style="margin-top: 0;">Click anywhere on the screen to let the program beep at you</p>
+      <p style="margin: 0;">Click anywhere on the screen to let the program beep at you</p>
     </div>
     <img src="/video_feed" alt="Video Feed">
 
@@ -120,24 +164,24 @@
       <span class="slider-value" id="pitch-value">440 Hz</span>
     </div>
 
-    <button class="slider-container slider-value" id="donate-button">Help Us Help You<br>Donate to Keep Us
-      Running!</button>
+    <button href="https://donate.stripe.com/3cs28e9IP9BvdbO4gg" id="donate-button">Help Us Help You!<br>Donate to Keep
+      Us
+      Running</button>
 
     <div> <a href="https://github.com/JaredTweed" style="margin-top: 0;">github.com/JaredTweed</a>
-      - <a href="https://www.linkedin.com/in/jared-tweed/" style="margin-top: 0;">linkedin.com/in/jared-tweed/</a></div>
+      - <a href="https://www.linkedin.com/in/jared-tweed/" style="margin-top: 0;">linkedin.com/in/jared-tweed/</a>
+    </div>
   </div>
 
   <script>
     document.getElementById('donate-button').addEventListener('click', async () => {
-      const response = await fetch('/create-checkout-session', { method: 'POST' });
-      const session = await response.json();
-
-      if (session.error) {
-        alert(session.error);
-        return;
+      const donationUrl = "https://donate.stripe.com/3cs28e9IP9BvdbO4gg";
+      try {
+        await new Promise(resolve => setTimeout(resolve, 100)); // Placeholder async action
+        window.location.href = donationUrl;
+      } catch (error) {
+        console.error("Error processing donation action:", error);
       }
-
-      stripe.redirectToCheckout({ sessionId: session.id });
     });
   </script>
 
@@ -277,3 +321,5 @@
 </html>
 
 <!-- http://127.0.0.1:5000/ -->
+<!-- https://github.com/JaredTweed/hands -->
+<!-- https://jaredtweed.github.io/hands/ -->
