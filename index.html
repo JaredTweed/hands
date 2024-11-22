@@ -150,7 +150,7 @@
       <p style="margin: 0;">Click anywhere on the screen to let the program beep at you</p>
     </div>
     
-    <img src="https://64.180.63.204:5000/video_feed" alt="Video Feed">
+    <img src="http://64.180.63.204:5000/video_feed" alt="Video Feed">
 
     <div class="slider-container">
       <label for="volume-slider">Volume</label>
@@ -164,9 +164,7 @@
       <span class="slider-value" id="pitch-value">440 Hz</span>
     </div>
 
-    <button href="https://donate.stripe.com/3cs28e9IP9BvdbO4gg" id="donate-button">Help Us Help You!<br>Donate to Keep
-      Us
-      Running</button>
+    <button id="donate-button">Help Us Help You!<br>Donate to Keep Us Running</button>
 
     <div> <a href="https://github.com/JaredTweed" style="margin-top: 0;">github.com/JaredTweed</a>
       - <a href="https://www.linkedin.com/in/jared-tweed/" style="margin-top: 0;">linkedin.com/in/jared-tweed/</a>
@@ -230,7 +228,7 @@
     }
 
     // Establish WebSocket connection
-    const socket = io("https://64.180.63.204:5000/");
+    const socket = io("http://64.180.63.204:5000/");
     socket.on('connect', () => {
       console.log('WebSocket connection established');
     });
