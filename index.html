@@ -19,7 +19,6 @@
   <!-- <script src="https://js.stripe.com/v3/"></script> -->
 
 
-
   <style>
     body {
       margin: 0;
@@ -150,7 +149,8 @@
       <h1 style="margin-bottom: 0;">Hand Detection App</h1>
       <p style="margin: 0;">Click anywhere on the screen to let the program beep at you</p>
     </div>
-    <img src="/video_feed" alt="Video Feed">
+    
+    <img src="http://64.180.63.204:5000/video_feed" alt="Video Feed">
 
     <div class="slider-container">
       <label for="volume-slider">Volume</label>
@@ -230,7 +230,7 @@
     }
 
     // Establish WebSocket connection
-    const socket = io();
+    const socket = io("http://64.180.63.204:5000/");
     socket.on('connect', () => {
       console.log('WebSocket connection established');
     });
