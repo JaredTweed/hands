@@ -397,11 +397,11 @@
       // await hands.send({ image: videoElement });
       try {
         await hands.send({ image: videoElement });
+        processing = false;
       } catch (error) {
         console.error("MediaPipe Hands processing failed:", error);
-        alert("This website is not designed for mobile. The hand detection process should work perfectly on a laptop or desktop.")
+        alert("This website is not designed for mobile. The hand detection process should work perfectly on a laptop or desktop.", error)
       }
-      processing = false;
     }
 
     async function initializeCamera() {
