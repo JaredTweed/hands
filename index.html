@@ -394,13 +394,16 @@
       if (processing) return;
       processing = true;
       await hands.send({ image: videoElement });
+      alert('hands sent');
       processing = false;
     }
 
     async function initializeCamera() {
+      alert('begining');
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       videoElement.srcObject = stream;
       videoElement.play();
+      alert('initial test');
 
       setInterval(() => processFrame(), 50); // Start processing with dynamic adjustment
     }
