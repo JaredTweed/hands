@@ -337,9 +337,9 @@
   </script>
 
   <script>
-    window.Module = {
-      TOTAL_MEMORY: 134217728*10, // Increase memory to 128MB
-    };
+    // window.Module = {
+    //   TOTAL_MEMORY: 134217728*10, // Increase memory to 128MB
+    // };
     // Hand Detection Code using MediaPipe Hands
     const videoElement = document.getElementById('video-element');
     const canvasElement = document.getElementById('canvas-element');
@@ -403,7 +403,7 @@
         processing = false;
       } catch (error) {
         console.error("MediaPipe Hands processing failed:", error);
-        alert("This website is not designed for mobile. The hand detection process should work perfectly on a laptop or desktop.");
+        alert("This website is currently not supported on mobile devices. For the best experience, please use a laptop or desktop.");
       }
     }
 
