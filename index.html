@@ -343,6 +343,7 @@
     const canvasCtx = canvasElement.getContext('2d');
 
     let handDetected = false;
+    let processing = false;
 
     function onResults(results) {
       // Update the canvas with the latest frame
@@ -389,16 +390,19 @@
 
     hands.onResults(onResults);
 
-    // Start video stream and process frames manually
+    async function processFrame() {
+      if (processing) return;
+      processing = true;
+      await hands.send({ image: videoElement });
+      processing = false;
+    }
+
     async function initializeCamera() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       videoElement.srcObject = stream;
       videoElement.play();
 
-      // Process video frames every 100ms
-      setInterval(() => {
-        hands.send({ image: videoElement });
-      }, 100);
+      setInterval(() => processFrame(), 50); // Start processing with dynamic adjustment
     }
     initializeCamera();
 
