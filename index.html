@@ -390,22 +390,24 @@
     });
 
     hands.onResults(onResults);
-    alert("here")
 
     async function processFrame() {
       if (processing) return;
       processing = true;
-      await hands.send({ image: videoElement });
-      alert('hands sent');
+      // await hands.send({ image: videoElement });
+      try {
+        await hands.send({ image: videoElement });
+      } catch (error) {
+        console.error("MediaPipe Hands processing failed:", error);
+        alert("This website is not designed for mobile. The hand detection process should work perfectly on a laptop or desktop.")
+      }
       processing = false;
     }
 
     async function initializeCamera() {
-      alert('begining');
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       videoElement.srcObject = stream;
       videoElement.play();
-      alert('initial test');
 
       setInterval(() => processFrame(), 50); // Start processing with dynamic adjustment
     }
