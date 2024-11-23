@@ -341,6 +341,7 @@
     const videoElement = document.getElementById('video-element');
     const canvasElement = document.getElementById('canvas-element');
     const canvasCtx = canvasElement.getContext('2d');
+    videoElement.crossOrigin = "anonymous";
 
     let handDetected = false;
     let processing = false;
