@@ -13,10 +13,10 @@
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" as="style"
     onload="this.onload=null;this.rel='stylesheet'">
 
-  <!-- Include Socket.IO client library -->
-  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-
-  <!-- <script src="https://js.stripe.com/v3/"></script> -->
+  <!-- Include MediaPipe Hands JavaScript library -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
   <style>
     body {
@@ -35,35 +35,50 @@
       flex-direction: column;
       margin-left: 10px;
       margin-right: 10px;
-      /* change width to 600 */
       width: 640px;
       text-align: center;
       align-items: center;
       gap: 15px;
-      /* margin: 0; */
-      /* border: 2px solid black; */
     }
 
     #app-container>* {
       width: 100%;
       box-sizing: border-box;
-      /* Ensure padding and borders are included in the width */
       margin: 0;
-      /* Reset any margin that might add extra space */
     }
 
     #title {
-      /* border: 2px solid black; */
       padding: 0;
     }
 
-    img {
+    #video-container {
+      position: relative;
       margin: 0;
       border: 2px solid black;
       height: 450px;
       background-color: black;
       border-radius: 30px;
       box-shadow: 10px 10px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    #video-element {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 30px;
+      object-fit: cover;
+      display: none;
+    }
+
+    #canvas-element {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 30px;
     }
 
     .slider-container {
@@ -109,7 +124,6 @@
 
     #donate-button {
       background-color: rgb(0, 0, 0);
-      /* width: 600px; */
       height: 90px;
       border-color: transparent;
       font-size: 25px;
@@ -146,10 +160,12 @@
   <div id="app-container">
     <div id="title">
       <h1 style="margin-bottom: 0;">Hand Detection App</h1>
-      <p style="margin: 0;">Click anywhere on the screen to let the program beep at you</p>
+      <p style="margin: 0;">Wave your hand to trigger the beep</p>
     </div>
-    
-    <img src=" https://2517-2001-569-506e-c200-5c63-a87f-9130-7313.ngrok-free.app/video_feed" alt="Video Feed">
+    <div id="video-container">
+      <video id="video-element" autoplay playsinline></video>
+      <canvas id="canvas-element"></canvas>
+    </div>
 
     <div class="slider-container">
       <label for="volume-slider">Volume</label>
@@ -165,7 +181,8 @@
 
     <button id="donate-button">Help Us Help You!<br>Donate to Keep Us Running</button>
 
-    <div> <a href="https://github.com/JaredTweed" style="margin-top: 0;">github.com/JaredTweed</a>
+    <div>
+      <a href="https://github.com/JaredTweed" style="margin-top: 0;">github.com/JaredTweed</a>
       - <a href="https://www.linkedin.com/in/jared-tweed/" style="margin-top: 0;">linkedin.com/in/jared-tweed/</a>
     </div>
   </div>
@@ -226,15 +243,24 @@
       }
     }
 
-    // Establish WebSocket connection
-    const socket = io("https://2517-2001-569-506e-c200-5c63-a87f-9130-7313.ngrok-free.app");
-    socket.on('connect', () => {
-      console.log('WebSocket connection established');
-    });
-    socket.on('disconnect', () => {
-      console.log('WebSocket disconnected');
+    // Load the saved pitch from localStorage on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedPitch = localStorage.getItem('pitchValue');
+      if (savedPitch !== null) {
+        pitchSlider.value = savedPitch;
+        pitchValue.textContent = `${savedPitch} Hz`;
+      }
     });
 
+    // Save the pitch value to localStorage whenever it changes
+    pitchSlider.addEventListener('input', () => {
+      const currentPitch = pitchSlider.value;
+      pitchValue.textContent = `${currentPitch} Hz`;
+      localStorage.setItem('pitchValue', currentPitch); // Save the value
+    });
+  </script>
+
+  <script>
     // Create a shared AudioContext for all beeping
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     let currentOscillator = null; // Track the current oscillator
@@ -286,7 +312,7 @@
         } else {
           playBeep();
         }
-      }, pulseInterval); // 500ms pulse interval
+      }, pulseInterval);
     }
 
     // Function to stop pulsing beeps
@@ -298,25 +324,83 @@
         stopBeep(currentOscillator);
       }
     }
+  </script>
 
-    // Listen for hand detection events
-    socket.on('hand_status', (data) => {
-      console.log('Received hand_status event:', data);
+  <script>
+    // Hand Detection Code using MediaPipe Hands
+    const videoElement = document.getElementById('video-element');
+    const canvasElement = document.getElementById('canvas-element');
+    const canvasCtx = canvasElement.getContext('2d');
 
-      if (data.hand_detected) {
-        document.body.style.backgroundColor = 'red';
-        startPulsingBeep(); // Start the pulsing beep
+    let handDetected = false;
+
+    function onResults(results) {
+      // Update the canvas with the latest frame
+      canvasCtx.save();
+      canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+      canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+      if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+        // Hands detected
+        if (!handDetected) {
+          handDetected = true;
+          document.body.style.backgroundColor = 'red';
+          startPulsingBeep(); // Start the pulsing beep
+        }
+
+        for (const landmarks of results.multiHandLandmarks) {
+          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
+            { color: '#000000', lineWidth: 3 });
+          drawLandmarks(canvasCtx, landmarks, { color: '#000000', radius: 2 });
+        }
       } else {
-        document.body.style.backgroundColor = '#f9f9f9';
-        stopPulsingBeep(); // Stop the pulsing beep
+        // No hands detected
+        if (handDetected) {
+          handDetected = false;
+          document.body.style.backgroundColor = '#f9f9f9';
+          stopPulsingBeep(); // Stop the pulsing beep
+        }
+      }
+      canvasCtx.restore();
+    }
+
+    const hands = new Hands({
+      locateFile: (file) => {
+        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
       }
     });
 
+    hands.setOptions({
+      maxNumHands: 2,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.73,
+      minTrackingConfidence: 0.7
+    });
+
+    hands.onResults(onResults);
+
+    const camera = new Camera(videoElement, {
+      onFrame: async () => {
+        await hands.send({ image: videoElement });
+      },
+      width: 640,
+      height: 450
+    });
+    camera.start();
+
+    // Adjust canvas size to match video size
+    videoElement.addEventListener('loadedmetadata', () => {
+      canvasElement.width = videoElement.videoWidth;
+      canvasElement.height = videoElement.videoHeight;
+    });
+
+    // In case of resize
+    window.addEventListener('resize', () => {
+      canvasElement.width = videoElement.videoWidth;
+      canvasElement.height = videoElement.videoHeight;
+    });
   </script>
+
 </body>
 
 </html>
-
-<!-- http://127.0.0.1:5000/ -->
-<!-- https://github.com/JaredTweed/hands -->
-<!-- https://jaredtweed.github.io/hands/ -->
