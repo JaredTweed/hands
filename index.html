@@ -18,6 +18,16 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-P9TY74DG66"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-P9TY74DG66');
+  </script>
+
   <style>
     body {
       margin: 0;
@@ -379,14 +389,18 @@
 
     hands.onResults(onResults);
 
-    const camera = new Camera(videoElement, {
-      onFrame: async () => {
-        await hands.send({ image: videoElement });
-      },
-      width: 640,
-      height: 450
-    });
-    camera.start();
+    // Start video stream and process frames manually
+    async function initializeCamera() {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoElement.srcObject = stream;
+      videoElement.play();
+
+      // Process video frames every 100ms
+      setInterval(() => {
+        hands.send({ image: videoElement });
+      }, 100);
+    }
+    initializeCamera();
 
     // Adjust canvas size to match video size
     videoElement.addEventListener('loadedmetadata', () => {
