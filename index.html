@@ -402,7 +402,7 @@
       videoElement.srcObject = stream;
       videoElement.play();
 
-      setInterval(() => processFrame(), 50); // Start processing with dynamic adjustment
+      setInterval(() => processFrame(), 1000); // Start processing with dynamic adjustment
     }
     initializeCamera();
 
