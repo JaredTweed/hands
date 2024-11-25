@@ -175,6 +175,8 @@
     </div>
     <div id="video-container">
       <div id="loading-spinner"></div>
+      <p style="color: white; margin: 5px;">Note: If you are on a mobile phone, this website often cannot access the
+        camera.</p>
       <video id="video-element" autoplay playsinline></video>
       <canvas id="canvas-element"></canvas>
     </div>
@@ -436,7 +438,7 @@
         processing = false;
       } catch (error) {
         console.error("MediaPipe Hands processing failed:", error);
-        alert("This website is currently not supported on mobile devices. For the best experience, please use a laptop or desktop.");
+        alert("This website is currently not functional on many mobile devices; especially if running several apps simultaneously. For the best experience, please use a laptop or desktop.");
       }
     }
 
@@ -444,15 +446,15 @@
       // console.log("1--")
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        // console.log("2--")
+        videoElement.srcObject = stream;
+        // console.log("3--")
+        videoElement.play();
+        // console.log("4--")
       } catch (error) {
         document.getElementById('loading-spinner').style.display = "none";
         alert("Cannot access the camera! It may be in use by another application or browser. \n\nSolution 1: If the camera is being used in another browser, please open that tab in this browser so they can run simultaneously.\n\nSolution 2: Close any other programs or browser tabs that might be using the camera, then try again.")
       }
-      // console.log("2--")
-      videoElement.srcObject = stream;
-      // console.log("3--")
-      videoElement.play();
-      // console.log("4--")
 
       setInterval(() => processFrame(), 50); // Start processing with dynamic adjustment
     }
