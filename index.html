@@ -134,7 +134,6 @@
 
     #donate-button {
       background-color: rgb(0, 0, 0);
-      height: 90px;
       border-color: transparent;
       font-size: 25px;
       font-weight: 700;
@@ -442,9 +441,18 @@
     }
 
     async function initializeCamera() {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // console.log("1--")
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      } catch (error) {
+        document.getElementById('loading-spinner').style.display = "none";
+        alert("Cannot access the camera! It may be in use by another application or browser. \n\nSolution 1: If the camera is being used in another browser, please open that tab in this browser so they can run simultaneously.\n\nSolution 2: Close any other programs or browser tabs that might be using the camera, then try again.")
+      }
+      // console.log("2--")
       videoElement.srcObject = stream;
+      // console.log("3--")
       videoElement.play();
+      // console.log("4--")
 
       setInterval(() => processFrame(), 50); // Start processing with dynamic adjustment
     }
