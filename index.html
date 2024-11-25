@@ -175,8 +175,9 @@
     </div>
     <div id="video-container">
       <div id="loading-spinner"></div>
-      <p style="color: white; margin: 5px;">Note: If you are on a mobile phone, this website often cannot access the
-        camera.</p>
+      <p id="mobile-phone-loading-screen" style="color: white; margin: 10px; display: none;">Note: This app is often not
+        funtional for mobile phones; especially if running several apps simultaneously. For the best experience, please
+        use a laptop or desktop.</p>
       <video id="video-element" autoplay playsinline></video>
       <canvas id="canvas-element"></canvas>
     </div>
@@ -242,6 +243,10 @@
         console.error("Error processing donation action:", error);
       }
     });
+
+    setTimeout(() => {
+      document.getElementById('mobile-phone-loading-screen').style.display = "block";
+    }, 4500);
   </script>
 
   <script>
