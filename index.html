@@ -175,6 +175,7 @@
       <p style="margin: 0;">Wave your hand to trigger the beep</p>
     </div>
     <div id="video-container">
+      <div id="loading-spinner"></div>
       <video id="video-element" autoplay playsinline></video>
       <canvas id="canvas-element"></canvas>
     </div>
@@ -198,6 +199,37 @@
       - <a href="https://www.linkedin.com/in/jared-tweed/" style="margin-top: 0;">linkedin.com/in/jared-tweed/</a>
     </div>
   </div>
+
+  <style>
+    #loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #7a7a7a;
+      border-radius: 50%;
+      animation: spin 2s linear infinite;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-top: -25px;
+      margin-left: -25px;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    #video-element {
+      display: none;
+      /* Hide the video initially */
+    }
+  </style>
 
   <script>
     document.getElementById('donate-button').addEventListener('click', async () => {
@@ -405,7 +437,7 @@
         processing = false;
       } catch (error) {
         console.error("MediaPipe Hands processing failed:", error);
-        alert("This website is currently not functional on many mobile devices; especially if running several apps simultaneously. For the best experience, please use a laptop or desktop.");
+        alert("This website is currently not supported on mobile devices. For the best experience, please use a laptop or desktop.");
       }
     }
 
