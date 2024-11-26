@@ -196,6 +196,7 @@
 
     <button id="donate-button">Help Me Help You!<br>Donate to Keep This Running</button>
 
+    <p>Be the first to donate!!!!!</p>
     <div>
       <a href="https://github.com/JaredTweed" style="margin-top: 0;">github.com/JaredTweed</a>
       - <a href="https://www.linkedin.com/in/jared-tweed/" style="margin-top: 0;">linkedin.com/in/jared-tweed/</a>
@@ -246,7 +247,7 @@
 
     setTimeout(() => {
       document.getElementById('mobile-phone-loading-screen').style.display = "block";
-    }, 4500);
+    }, 6000);
   </script>
 
   <script>
@@ -388,6 +389,7 @@
 
     let handDetected = false;
     let processing = false;
+    let videoInitializedSuccessfully = false;
 
     function onResults(results) {
       // Update the canvas with the latest frame
@@ -437,9 +439,12 @@
     async function processFrame() {
       if (processing) return;
       processing = true;
-      // await hands.send({ image: videoElement });
       try {
         await hands.send({ image: videoElement });
+        if (videoInitializedSuccessfully == false) {
+          document.getElementById('mobile-phone-loading-screen').style.display = "none";
+          videoInitializedSuccessfully = true;
+        }
         processing = false;
       } catch (error) {
         console.error("MediaPipe Hands processing failed:", error);
