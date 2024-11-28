@@ -29,13 +29,40 @@
   </script>
 
   <style>
+    :root {
+      --background-color: #f9f9f9;
+      --text-color: #000000;
+      --card-bg-color: #ffffff;
+      --border-color: black;
+      --button-bg-color: black;
+      --button-text-color: white;
+      --slider-bg-color: white;
+      --donate-button-bg: black;
+      --donate-button-text: white;
+      --shadow: 10px 10px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    [data-theme="dark"] {
+      --background-color: #1e1e1e;
+      --text-color: #ffffff;
+      --card-bg-color: #333333;
+      --border-color: white;
+      --button-bg-color: white;
+      --button-text-color: black;
+      --slider-bg-color: #444444;
+      --donate-button-bg: white;
+      --donate-button-text: black;
+      --shadow: 0px 0px 65px rgba(0, 0, 0, 1);
+    }
+
     body {
       margin: 0;
       font-family: Poppins, Montserrat, Arial, sans-serif;
       display: flex;
       justify-content: center;
       height: 100vh;
-      background-color: #f9f9f9;
+      background-color: var(--background-color);
+      color: var(--text-color);
       transition: background-color 0.5s;
     }
 
@@ -64,11 +91,11 @@
     #video-container {
       position: relative;
       margin: 0;
-      border: 2px solid black;
+      border: 2px solid var(--border-color);
       height: 450px;
       background-color: black;
       border-radius: 30px;
-      box-shadow: 10px 10px 15px rgba(0, 0, 0, 0.4);
+      box-shadow: var(--shadow);
     }
 
     #video-element {
@@ -92,12 +119,13 @@
     }
 
     .slider-container {
-      border: 2px solid black;
+      border: 2px solid var(--border-color);
+      background-color: var(--slider-bg-color);
       border-radius: 30px;
       height: 30px;
       font-family: Poppins, Montserrat, Arial, sans-serif;
-      box-shadow: 10px 10px 15px rgba(0, 0, 0, 0.4);
-      background-color: white;
+      box-shadow: var(--shadow);
+      /* background-color: white; */
       position: relative;
       padding: 0;
     }
@@ -130,18 +158,19 @@
       font-weight: 700;
       font-size: 16px;
       font-family: Poppins, Montserrat, Arial, sans-serif;
+      color: var(--text-color);
     }
 
     #donate-button {
-      background-color: rgb(0, 0, 0);
+      background-color: var(--donate-button-bg);
       border-color: transparent;
       font-size: 25px;
       font-weight: 700;
       border-radius: 30px;
       margin: 0;
-      color: white;
+      color: var(--donate-button-text);
       font-family: Poppins, Montserrat, Arial, sans-serif;
-      box-shadow: 10px 10px 15px rgba(0, 0, 0, 0.4);
+      box-shadow: var(--shadow);
       position: relative;
     }
 
@@ -161,8 +190,19 @@
     }
 
     a {
-      color: black;
+      color: var(--text-color);
       font-family: Poppins, Montserrat, Arial, sans-serif;
+    }
+
+    #toggle-theme {
+      font-family: Poppins, Montserrat, Arial, sans-serif;
+      cursor: pointer;
+      background-color: var(--card-bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 30px;
+      padding: 5px 10px;
+      color: var(--text-color);
+      box-shadow: var(--shadow);
     }
   </style>
 </head>
@@ -195,7 +235,7 @@
     </div>
 
     <button id="donate-button">Help Me Help You!<br>Donate to Keep This Running</button>
-
+    <button id="toggle-theme">Toggle Dark Mode</button>
     <p>Be the first to donate!!!!!</p>
     <div>
       <a href="https://github.com/JaredTweed" style="margin-top: 0;">github.com/JaredTweed</a>
@@ -233,6 +273,34 @@
       /* Hide the video initially */
     }
   </style>
+
+  <script>
+    const toggleThemeButton = document.getElementById('toggle-theme');
+    const currentTheme = localStorage.getItem('theme') || 'light';
+
+    document.body.setAttribute('data-theme', currentTheme);
+
+    toggleThemeButton.addEventListener('click', () => {
+      const newTheme = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+      document.body.setAttribute('data-theme', newTheme);
+      if (!self.handDetected) { returnBgToTheme(); }
+      localStorage.setItem('theme', newTheme);
+    });
+
+    function setBgRed() {
+      // Set the background to red when a hand is detected
+      document.body.style.setProperty('--background-color', 'red');
+    }
+
+    function returnBgToTheme() {
+      // Reset the background color to match the current theme
+      const currentTheme = document.body.getAttribute('data-theme');
+      document.body.style.setProperty(
+        '--background-color',
+        currentTheme === 'dark' ? '#1e1e1e' : '#f9f9f9'
+      );
+    }
+  </script>
 
   <script>
     document.getElementById('donate-button').addEventListener('click', async () => {
@@ -387,7 +455,7 @@
     const canvasCtx = canvasElement.getContext('2d');
     videoElement.crossOrigin = "anonymous";
 
-    let handDetected = false;
+    self.handDetected = false;
     let processing = false;
     let videoInitializedSuccessfully = false;
 
@@ -399,9 +467,9 @@
 
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
         // Hands detected
-        if (!handDetected) {
-          handDetected = true;
-          document.body.style.backgroundColor = 'red';
+        if (!self.handDetected) {
+          self.handDetected = true;
+          setBgRed();
           startPulsingBeep(); // Start the pulsing beep
         }
 
@@ -412,9 +480,9 @@
         }
       } else {
         // No hands detected
-        if (handDetected) {
-          handDetected = false;
-          document.body.style.backgroundColor = '#f9f9f9';
+        if (self.handDetected) {
+          self.handDetected = false;
+          returnBgToTheme();
           stopPulsingBeep(); // Stop the pulsing beep
         }
       }
