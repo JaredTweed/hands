@@ -239,6 +239,28 @@
       color: var(--text-color);
       box-shadow: var(--shadow);
     }
+
+    #streak-widget {
+      background-color: var(--card-bg-color);
+      margin: 0;
+      padding: 0 5px 5px 5px;
+      border: 2px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    #streak-widget * {
+      margin: 1px;
+      padding: 0;
+    }
+
+    #streak-break-bar {
+      background-color: var(--text-color);
+      width: 100px;
+      height: 10px;
+      /* background-color: #000000; */
+      border-radius: 30px;
+    }
   </style>
 </head>
 
@@ -252,6 +274,10 @@
       </div>
     </div>
 
+    <div id="streak-widget">
+      <p id='streak-display'></p>
+      <div id='streak-break-bar'></div>
+    </div>
 
     <div id="video-container">
       <div id="loading-spinner"></div>
@@ -275,8 +301,11 @@
     </div>
 
     <button id="donate-button">Help Me Help You!<br>Donate to Keep This Running</button>
+
     <button id="toggle-theme">Toggle Dark Mode</button>
-    <p>Be the first to donate!!!!!</p>
+    <!-- <p>Be the first to donate!!!!!</p> -->
+
+
     <div>
       <a href="https://github.com/JaredTweed" style="margin-top: 0;">github.com/JaredTweed</a>
       - <a href="https://www.linkedin.com/in/jared-tweed/" style="margin-top: 0;">linkedin.com/in/jared-tweed/</a>
@@ -313,6 +342,85 @@
       /* Hide the video initially */
     }
   </style>
+
+  <script>
+    document.getElementById('streak-display').textContent = formatStreak(0);
+    function formatStreak(counter) {
+      const hours = Math.floor(counter / 3600);
+      const minutes = Math.floor((counter % 3600) / 60);
+      const seconds = counter % 60;
+
+      let formattedStreak = 'Streak: ';
+      if (hours > 0) {
+        formattedStreak += `${hours}h `;
+      }
+      if (minutes > 0 || hours > 0) { // Include minutes if there are hours
+        formattedStreak += `${minutes}m `;
+      }
+      formattedStreak += `${seconds}s`;
+
+      return formattedStreak;
+    }
+
+    let streakCounter = 0; // Variable to track the streak count
+    let streakInterval = null; // Interval to count streak time
+    let streakBreakTimeout = null; // Timeout for tracking continuous breaks
+    let delay = 1100; // 1.5 seconds
+    let cameraLoading = true;
+    let streakBreakStartTime = null;
+
+    function setStreakToZero() {
+      if (streakBreakTimeout) return; // Avoid setting a new timeout if one already exists
+
+      streakBreakStartTime = Date.now();
+      streakBreakTimeout = setTimeout(() => {
+        stopStreak(); // Reset streak if the break was continuous for 2 seconds
+        streakBreakTimeout = null; // Clear the timeout flag
+
+        streakBreakStartTime = null;
+      }, delay);
+    }
+
+    function playStreak() {
+      if (streakBreakTimeout) {
+        clearTimeout(streakBreakTimeout); // Cancel the reset timeout if the streak is revived
+        streakBreakTimeout = null;
+      }
+
+      if (!streakInterval) {
+        streakInterval = setInterval(() => {
+          streakCounter++; // Increment streak counter
+          document.getElementById('streak-display').textContent = formatStreak(streakCounter); // Update streak display
+        }, 1000); // Update every second
+        cameraLoading = false;
+      }
+    }
+
+    function stopStreak() {
+      streakCounter = 0; // Reset the streak counter
+      document.getElementById('streak-display').textContent = formatStreak(streakCounter);
+
+      if (streakInterval) {
+        clearInterval(streakInterval); // Stop the interval
+        streakInterval = null;
+      }
+    }
+
+
+    // Function to get the time elapsed since `setTimeout` started
+    function percentDelayRemaining() {
+      output = streakBreakTimeout ? Math.max(0, 1 - (Date.now() - streakBreakStartTime) / delay) : streakInterval ? 1 : cameraLoading ? 1 : 0;
+      // console.log(output);
+      return output; // Elapsed time in seconds
+    }
+
+    // Shrinking Timout Bar
+    const bar = document.getElementById('streak-break-bar');
+    bar.style.width = '100%'; // Reset bar to full width
+    timeoutBarInterval = setInterval(() => {
+      bar.style.width = `${percentDelayRemaining() * 100}%`;
+    }, 1);
+  </script>
 
   <script>
     const toggleThemeButton = document.getElementById('toggle-theme');
@@ -511,6 +619,7 @@
           self.handDetected = true;
           setBgRed();
           startPulsingBeep(); // Start the pulsing beep
+          setStreakToZero()
         }
 
         for (const landmarks of results.multiHandLandmarks) {
@@ -524,6 +633,7 @@
           self.handDetected = false;
           returnBgToTheme();
           stopPulsingBeep(); // Stop the pulsing beep
+          playStreak();
         }
       }
       canvasCtx.restore();
@@ -569,6 +679,7 @@
         // console.log("3--")
         videoElement.play();
         // console.log("4--")
+        playStreak();
       } catch (error) {
         document.getElementById('loading-spinner').style.display = "none";
         alert("Cannot access the camera! It may be in use by another application or browser. \n\nSolution 1: If the camera is being used in another browser, please open that tab in this browser so they can run simultaneously.\n\nSolution 2: Close any other programs or browser tabs that might be using the camera, then try again.")
