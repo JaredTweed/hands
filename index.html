@@ -133,6 +133,23 @@
       box-shadow: var(--shadow);
     }
 
+    #streak-records-dropdown {
+      display: none;
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: var(--card-bg-color);
+      border: 1px solid var(--border-color);
+      border-radius: 25px;
+      padding: 10px;
+      z-index: 1;
+    }
+
+    #streak-records-dropdown * {
+      padding: 0;
+      margin: 0;
+    }
+
     #video-element {
       position: absolute;
       top: 0;
@@ -274,10 +291,14 @@
       </div>
     </div>
 
-    <div id="streak-widget">
-      <p id='streak-display'></p>
-      <div id='streak-break-bar'></div>
+    <div id="streak-widget" style="position: relative;">
+      <p id="streak-display"></p>
+
+      <button id="streak-records-toggle"
+        style="position: absolute; top: 5px; right: 10px; background: none; border: none; cursor: pointer; color: var(--text-color); font-size: 12px;">☰</button>
+      <div id="streak-break-bar"></div>
     </div>
+
 
     <div id="video-container">
       <div id="loading-spinner"></div>
@@ -286,6 +307,15 @@
         use a laptop or desktop.</p>
       <video id="video-element" autoplay playsinline></video>
       <canvas id="canvas-element"></canvas>
+
+      <div id="streak-records-dropdown">
+        <p id="streak-record-today">Today's Record: 0s</p>
+        <p id="streak-record-week">This Week's Record: 0s</p>
+        <p id="streak-record-month">This Month's Record: 0s</p>
+        <p id="streak-record-year">This Year's Record: 0s</p>
+        <p id="streak-record-allTime">All-Time Record: 0s</p>
+      </div>
+
     </div>
 
     <div class="slider-container">
@@ -300,10 +330,10 @@
       <span class="slider-value" id="pitch-value">440 Hz</span>
     </div>
 
-    <button id="donate-button">Help Me Help You!<br>Donate to Keep This Running</button>
+    <button id="donate-button">Help Me Help You!<br>Donate to Keep This Running (be the first)</button>
 
     <button id="toggle-theme">Toggle Dark Mode</button>
-    <!-- <p>Be the first to donate!!!!!</p> -->
+    <!-- <p></p> -->
 
 
     <div>
@@ -344,82 +374,173 @@
   </style>
 
   <script>
-    document.getElementById('streak-display').textContent = formatStreak(0);
-    function formatStreak(counter) {
-      const hours = Math.floor(counter / 3600);
-      const minutes = Math.floor((counter % 3600) / 60);
-      const seconds = counter % 60;
+    // Initialize records from localStorage
+    const initializeRecords = () => {
+      const today = new Date();
+      const todayKey = today.toISOString().split('T')[0]; // Today's date (YYYY-MM-DD)
+      const currentMonth = todayKey.slice(0, 7); // Current month (YYYY-MM)
+      const currentYear = todayKey.slice(0, 4); // Current year (YYYY)
 
-      let formattedStreak = 'Streak: ';
+      // Calculate the start of the week (Sunday)
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay());
+      const weekKey = startOfWeek.toISOString().split('T')[0]; // Week start date (YYYY-MM-DD)
+
+      const storedRecords = JSON.parse(localStorage.getItem('streakRecords')) || {};
+      const records = {
+        today: storedRecords[todayKey] || 0,
+        week: storedRecords[weekKey] || 0,
+        month: storedRecords[currentMonth] || 0,
+        year: storedRecords[currentYear] || 0,
+        allTime: storedRecords.allTime || 0,
+      };
+
+      return { records, todayKey, weekKey, currentMonth, currentYear };
+    };
+
+    let { records, todayKey, weekKey, currentMonth, currentYear } = initializeRecords();
+
+    // Update localStorage with new records
+    const updateRecords = (newStreak) => {
+      const storedRecords = JSON.parse(localStorage.getItem('streakRecords')) || {};
+
+      // Update today's record
+      if (newStreak > records.today) {
+        records.today = newStreak;
+        storedRecords[todayKey] = newStreak;
+      }
+
+      // Update this week's record
+      if (newStreak > records.week) {
+        records.week = newStreak;
+        storedRecords[weekKey] = newStreak;
+      }
+
+      // Update this month's record
+      if (newStreak > records.month) {
+        records.month = newStreak;
+        storedRecords[currentMonth] = newStreak;
+      }
+
+      // Update this year's record
+      if (newStreak > records.year) {
+        records.year = newStreak;
+        storedRecords[currentYear] = newStreak;
+      }
+
+      // Update the all-time record
+      if (newStreak > records.allTime) {
+        records.allTime = newStreak;
+        storedRecords.allTime = newStreak;
+      }
+
+      // Save updated records to localStorage
+      localStorage.setItem('streakRecords', JSON.stringify(storedRecords));
+      updateDropdownDisplay();
+    };
+
+    // Update dropdown display
+    const updateDropdownDisplay = () => {
+      const displayElements = {
+        "streak-record-today": `Today's Record: ${formatTime(records.today)}`,
+        "streak-record-week": `This Week's Record: ${formatTime(records.week)}`,
+        "streak-record-month": `This Month's Record: ${formatTime(records.month)}`,
+        "streak-record-year": `This Year's Record: ${formatTime(records.year)}`,
+        "streak-record-allTime": `All-Time Record: ${formatTime(records.allTime)}`,
+      };
+
+      Object.entries(displayElements).forEach(([id, text]) => {
+        const element = document.getElementById(id);
+        if (element) element.textContent = text;
+      });
+    };
+
+    updateDropdownDisplay();
+
+    // Function to toggle dropdown
+    document.getElementById('streak-records-toggle').addEventListener('click', () => {
+      const dropdown = document.getElementById('streak-records-dropdown');
+      dropdown.style.display = dropdown.style.display === 'none' || dropdown.style.display === '' ? 'block' : 'none';
+    });
+
+
+
+
+
+
+
+    document.getElementById('streak-display').textContent = formatStreak(0);
+    function formatTime(timeInSeconds) {
+      const hours = Math.floor(timeInSeconds / 3600);
+      const minutes = Math.floor((timeInSeconds % 3600) / 60);
+      const seconds = timeInSeconds % 60;
+
+      let formattedTime = '';
       if (hours > 0) {
-        formattedStreak += `${hours}h `;
+        formattedTime += `${hours}h `;
       }
       if (minutes > 0 || hours > 0) { // Include minutes if there are hours
-        formattedStreak += `${minutes}m `;
+        formattedTime += `${minutes}m `;
       }
-      formattedStreak += `${seconds}s`;
+      formattedTime += `${seconds}s`;
 
-      return formattedStreak;
+      return formattedTime;
     }
+    function formatStreak(counter) { return 'Streak: ' + formatTime(counter); }
 
     let streakCounter = 0; // Variable to track the streak count
     let streakInterval = null; // Interval to count streak time
     let streakBreakTimeout = null; // Timeout for tracking continuous breaks
-    let delay = 1100; // 1.5 seconds
-    let cameraLoading = true;
     let streakBreakStartTime = null;
 
-    function setStreakToZero() {
-      if (streakBreakTimeout) return; // Avoid setting a new timeout if one already exists
+    const bar = document.getElementById('streak-break-bar');
+    bar.style.width = '100%';
+
+    function setStreakToZero(delay = 1100) {
+      // Avoid setting a new timeout if one already exists
+      if (streakBreakTimeout) return;
 
       streakBreakStartTime = Date.now();
       streakBreakTimeout = setTimeout(() => {
-        stopStreak(); // Reset streak if the break was continuous for 2 seconds
+        // Reset streak if the break was continuous for `delay` milliseconds
+        streakCounter = 0;
+        document.getElementById('streak-display').textContent = formatStreak(streakCounter);
+        if (streakInterval) {
+          clearInterval(streakInterval);
+          streakInterval = null;
+        }
         streakBreakTimeout = null; // Clear the timeout flag
-
         streakBreakStartTime = null;
       }, delay);
+
+      // Update shrinking timeout bar
+      const timeoutBarInterval = setInterval(() => {
+        const percentRemaining = streakBreakTimeout ? Math.max(0, 1 - (Date.now() - streakBreakStartTime) / delay) : streakInterval ? 1 : cameraLoading ? 1 : 0;
+        bar.style.width = `${percentRemaining * 100}%`;
+
+        // Stop interval when timeout is complete
+        if (percentRemaining === 0) clearInterval(timeoutBarInterval);
+      }, 1);
     }
 
     function playStreak() {
+      bar.style.width = '100%';
+
+      // Cancel the reset timeout if the streak is revived
       if (streakBreakTimeout) {
-        clearTimeout(streakBreakTimeout); // Cancel the reset timeout if the streak is revived
+        clearTimeout(streakBreakTimeout);
         streakBreakTimeout = null;
       }
 
+      // Start streak interval if not already running
       if (!streakInterval) {
         streakInterval = setInterval(() => {
           streakCounter++; // Increment streak counter
           document.getElementById('streak-display').textContent = formatStreak(streakCounter); // Update streak display
+          updateRecords(streakCounter); // Update streak records (daily, monthly, yearly)
         }, 1000); // Update every second
-        cameraLoading = false;
       }
     }
-
-    function stopStreak() {
-      streakCounter = 0; // Reset the streak counter
-      document.getElementById('streak-display').textContent = formatStreak(streakCounter);
-
-      if (streakInterval) {
-        clearInterval(streakInterval); // Stop the interval
-        streakInterval = null;
-      }
-    }
-
-
-    // Function to get the time elapsed since `setTimeout` started
-    function percentDelayRemaining() {
-      output = streakBreakTimeout ? Math.max(0, 1 - (Date.now() - streakBreakStartTime) / delay) : streakInterval ? 1 : cameraLoading ? 1 : 0;
-      // console.log(output);
-      return output; // Elapsed time in seconds
-    }
-
-    // Shrinking Timout Bar
-    const bar = document.getElementById('streak-break-bar');
-    bar.style.width = '100%'; // Reset bar to full width
-    timeoutBarInterval = setInterval(() => {
-      bar.style.width = `${percentDelayRemaining() * 100}%`;
-    }, 1);
   </script>
 
   <script>
@@ -701,6 +822,7 @@
       canvasElement.height = videoElement.videoHeight;
     });
   </script>
+
 
 </body>
 
