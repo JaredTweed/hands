@@ -278,6 +278,16 @@
       /* background-color: #000000; */
       border-radius: 30px;
     }
+
+    #pause-streak-button {
+      color: var(--donate-button-text);
+      font-family: Poppins, Montserrat, Arial, sans-serif;
+      background-color: var(--donate-button-bg);
+      border-radius: 10px;
+      padding: 0 10px;
+      border: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 
@@ -314,6 +324,7 @@
         <p id="streak-record-month">This Month's Record: 0s</p>
         <p id="streak-record-year">This Year's Record: 0s</p>
         <p id="streak-record-allTime">All-Time Record: 0s</p>
+        <button id="pause-streak-button">Pause Streak</button>
       </div>
 
     </div>
@@ -488,6 +499,7 @@
     }
     function formatStreak(counter) { return 'Streak: ' + formatTime(counter); }
 
+    let isPaused = false;
     let streakCounter = 0; // Variable to track the streak count
     let streakInterval = null; // Interval to count streak time
     let streakBreakTimeout = null; // Timeout for tracking continuous breaks
@@ -496,9 +508,10 @@
     const bar = document.getElementById('streak-break-bar');
     bar.style.width = '100%';
 
-    function setStreakToZero(delay = 1100) {
+    function setStreakToZero(delay = 1200) {
       // Avoid setting a new timeout if one already exists
       if (streakBreakTimeout) return;
+      if (isPaused) { return; }
 
       streakBreakStartTime = Date.now();
       streakBreakTimeout = setTimeout(() => {
@@ -515,15 +528,17 @@
 
       // Update shrinking timeout bar
       const timeoutBarInterval = setInterval(() => {
-        const percentRemaining = streakBreakTimeout ? Math.max(0, 1 - (Date.now() - streakBreakStartTime) / delay) : streakInterval ? 1 : cameraLoading ? 1 : 0;
+        const percentRemaining = streakBreakTimeout ? Math.max(0, 1 - (Date.now() - streakBreakStartTime) / delay) : streakInterval ? 1 : 0;
         bar.style.width = `${percentRemaining * 100}%`;
 
         // Stop interval when timeout is complete
         if (percentRemaining === 0) clearInterval(timeoutBarInterval);
+        if (isPaused) { bar.style.width = '100%'; }
       }, 1);
     }
 
     function playStreak() {
+      if (isPaused == true) { return; }
       bar.style.width = '100%';
 
       // Cancel the reset timeout if the streak is revived
@@ -541,6 +556,45 @@
         }, 1000); // Update every second
       }
     }
+
+    document.getElementById('pause-streak-button').addEventListener('click', () => {
+      const pauseButton = document.getElementById('pause-streak-button');
+      if (isPaused == false) {
+        isPaused = true;
+        playStreak();
+        pauseStreak();
+        pauseButton.textContent = 'Play Streak';
+        bar.style.width = '100%';
+      }
+      else {
+        isPaused = false;
+        playStreak();
+        pauseButton.textContent = 'Pause Streak';
+        document.getElementById('streak-display').textContent = `Streak: ${formatTime(streakCounter)}`;
+
+        if (self.handDetected == true) { setStreakToZero(); }
+      }
+      bar.style.width = '100%';
+    });
+    function pauseStreak() {
+      // Pause the streak and update the display
+      if (streakInterval) {
+        clearInterval(streakInterval); // Stop the interval counting the streak
+        streakInterval = null;
+        // console.log("Streak paused at:", streakCounter);
+      }
+
+      if (streakBreakTimeout) {
+        clearTimeout(streakBreakTimeout); // Clear any active timeout
+        streakBreakTimeout = null;
+        // console.log("Streak break timer cleared.");
+      }
+
+      // Optional: Update the display or notify the user that the streak is paused
+      document.getElementById('streak-display').textContent = `Streak Paused: ${formatTime(streakCounter)}`;
+      bar.style.width = '100%';
+    }
+
   </script>
 
   <script>
