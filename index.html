@@ -384,7 +384,7 @@
     }
   </style>
 
-  <script>
+  <script> // Streak Display and Storage
     // Initialize records from localStorage
     const initializeRecords = () => {
       const today = new Date();
@@ -474,12 +474,6 @@
       dropdown.style.display = dropdown.style.display === 'none' || dropdown.style.display === '' ? 'block' : 'none';
     });
 
-
-
-
-
-
-
     document.getElementById('streak-display').textContent = formatStreak(0);
     function formatTime(timeInSeconds) {
       const hours = Math.floor(timeInSeconds / 3600);
@@ -498,101 +492,107 @@
       return formattedTime;
     }
     function formatStreak(counter) { return 'Streak: ' + formatTime(counter); }
+  </script>
 
+  <script> // Streak Tracking
+
+    // Starting variables
     let isPaused = false;
     let streakCounter = 0; // Variable to track the streak count
-    let streakInterval = null; // Interval to count streak time
-    let streakBreakTimeout = null; // Timeout for tracking continuous breaks
-    let streakBreakStartTime = null;
-
+    let streakIsCounting = null; // Interval to count streak time
+    let streakIsDying = null; // Timeout for tracking continuous breaks
+    let killStreakInitTime = null;
+    let steakIsDead = false;
     const bar = document.getElementById('streak-break-bar');
+    const pauseButton = document.getElementById('pause-streak-button');
     bar.style.width = '100%';
 
-    function setStreakToZero(delay = 1200) {
-      // Avoid setting a new timeout if one already exists
-      if (streakBreakTimeout) return;
-      if (isPaused) { return; }
+    // Settings
+    const allowKillStreakDuringPause = true;
 
-      streakBreakStartTime = Date.now();
-      streakBreakTimeout = setTimeout(() => {
-        // Reset streak if the break was continuous for `delay` milliseconds
+    function killStreak(delay = 1200) {
+      if (isPaused && !allowKillStreakDuringPause) { return; }
+
+      // Avoid setting a new timeout if a unrevived one already exists (i.e., if the streak is dying or dead)
+      if (streakIsDying || streakIsDead) return;
+
+      killStreakInitTime = Date.now();
+      streakIsDying = setTimeout(() => {
+        // Reset streak
         streakCounter = 0;
-        document.getElementById('streak-display').textContent = formatStreak(streakCounter);
-        if (streakInterval) {
-          clearInterval(streakInterval);
-          streakInterval = null;
+        document.getElementById('streak-display').textContent = isPaused ? `Streak Paused: ${formatTime(streakCounter)}` : formatStreak(streakCounter);
+        if (streakIsCounting) {
+          clearInterval(streakIsCounting);
+          streakIsCounting = null;
         }
-        streakBreakTimeout = null; // Clear the timeout flag
-        streakBreakStartTime = null;
+
+        // Indicate that the streak is no longer dying
+        streakIsDead = true;
+        streakIsDying = null;
+        killStreakInitTime = null;
       }, delay);
 
       // Update shrinking timeout bar
       const timeoutBarInterval = setInterval(() => {
-        const percentRemaining = streakBreakTimeout ? Math.max(0, 1 - (Date.now() - streakBreakStartTime) / delay) : streakInterval ? 1 : 0;
+        const percentRemaining = streakIsDying ? Math.max(0, 1 - (Date.now() - killStreakInitTime) / delay) : streakIsDead ? 0 : 1;
         bar.style.width = `${percentRemaining * 100}%`;
 
         // Stop interval when timeout is complete
         if (percentRemaining === 0) clearInterval(timeoutBarInterval);
-        if (isPaused) { bar.style.width = '100%'; }
       }, 50);
     }
 
-    function playStreak() {
-      if (isPaused == true) { return; }
-      bar.style.width = '100%';
+    document.getElementById('pause-streak-button').addEventListener('click', () => {
+      if (isPaused == true) {
+        isPaused = false;
+        if (!streakIsDead) { playStreak(); } // The streak will not be dead if the 
+        if (self.handDetected == true) { killStreak(); }
 
-      // Cancel the reset timeout if the streak is revived
-      if (streakBreakTimeout) {
-        clearTimeout(streakBreakTimeout);
-        streakBreakTimeout = null;
+        // Update the display
+        pauseButton.textContent = 'Pause Streak';
+        document.getElementById('streak-display').textContent = `Streak: ${formatTime(streakCounter)}`;
+      } else {
+        isPaused = true;
+        pauseStreak();
+
+        // Update the display
+        pauseButton.textContent = 'Play Streak';
+        document.getElementById('streak-display').textContent = `Streak Paused: ${formatTime(streakCounter)}`;
       }
+    });
 
+
+
+    function playStreak() {
       // Start streak interval if not already running
-      if (!streakInterval) {
-        streakInterval = setInterval(() => {
+      if (!streakIsCounting) {
+        streakIsCounting = setInterval(() => {
           streakCounter++; // Increment streak counter
-          document.getElementById('streak-display').textContent = formatStreak(streakCounter); // Update streak display
+          document.getElementById('streak-display').textContent = formatStreak(streakCounter);
           updateRecords(streakCounter); // Update streak records (daily, monthly, yearly)
         }, 1000); // Update every second
       }
     }
 
-    document.getElementById('pause-streak-button').addEventListener('click', () => {
-      const pauseButton = document.getElementById('pause-streak-button');
-      if (isPaused == false) {
-        isPaused = true;
-        playStreak();
-        pauseStreak();
-        pauseButton.textContent = 'Play Streak';
-        bar.style.width = '100%';
-      }
-      else {
-        isPaused = false;
-        playStreak();
-        pauseButton.textContent = 'Pause Streak';
-        document.getElementById('streak-display').textContent = `Streak: ${formatTime(streakCounter)}`;
-
-        if (self.handDetected == true) { setStreakToZero(); }
-      }
-      bar.style.width = '100%';
-    });
     function pauseStreak() {
-      // Pause the streak and update the display
-      if (streakInterval) {
-        clearInterval(streakInterval); // Stop the interval counting the streak
-        streakInterval = null;
-        // console.log("Streak paused at:", streakCounter);
+      // Pause the streak
+      if (streakIsCounting) {
+        clearInterval(streakIsCounting);
+        streakIsCounting = null;
       }
 
-      if (streakBreakTimeout) {
-        clearTimeout(streakBreakTimeout); // Clear any active timeout
-        streakBreakTimeout = null;
-        // console.log("Streak break timer cleared.");
-      }
+      // Clear any active timeout
+      if (!allowKillStreakDuringPause) reviveStreak();
+    }
 
-      // Optional: Update the display or notify the user that the streak is paused
-      document.getElementById('streak-display').textContent = `Streak Paused: ${formatTime(streakCounter)}`;
+    function reviveStreak() {
+      streakIsDead = false;
       bar.style.width = '100%';
+      if (streakIsDying) {
+        clearTimeout(streakIsDying);
+        streakIsDying = null;
+      }
+      if (!isPaused) { playStreak(); }
     }
 
   </script>
@@ -788,13 +788,13 @@
       canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
       canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
 
+      // Hands detected
       if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-        // Hands detected
         if (!self.handDetected) {
           self.handDetected = true;
           setBgRed();
           startPulsingBeep(); // Start the pulsing beep
-          setStreakToZero()
+          killStreak()
         }
 
         for (const landmarks of results.multiHandLandmarks) {
@@ -802,13 +802,12 @@
             { color: '#000000', lineWidth: 3 });
           drawLandmarks(canvasCtx, landmarks, { color: '#000000', radius: 2 });
         }
-      } else {
-        // No hands detected
+      } else { // No hands detected
         if (self.handDetected) {
           self.handDetected = false;
           returnBgToTheme();
           stopPulsingBeep(); // Stop the pulsing beep
-          playStreak();
+          reviveStreak();
         }
       }
       canvasCtx.restore();
@@ -854,7 +853,7 @@
         // console.log("3--")
         videoElement.play();
         // console.log("4--")
-        playStreak();
+        reviveStreak();
       } catch (error) {
         document.getElementById('loading-spinner').style.display = "none";
         alert("Cannot access the camera! It may be in use by another application or browser. \n\nSolution 1: If the camera is being used in another browser, please open that tab in this browser so they can run simultaneously.\n\nSolution 2: Close any other programs or browser tabs that might be using the camera, then try again.")
