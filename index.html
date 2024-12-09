@@ -40,6 +40,7 @@
       --donate-button-bg: black;
       --donate-button-text: white;
       --shadow: 10px 10px 15px rgba(0, 0, 0, 0.5);
+      --mild-shadow: 3px 3px 15px rgba(0, 0, 0, 0.5);
       --icon-border: 2px solid black;
     }
 
@@ -54,6 +55,7 @@
       --donate-button-bg: white;
       --donate-button-text: black;
       --shadow: 0px 0px 65px rgb(255, 255, 255, 0.34);
+      --mild-shadow: 0px 0px 65px rgb(255, 255, 255, 0.34);
       --icon-border: none;
     }
 
@@ -86,17 +88,12 @@
       margin: 0;
     }
 
-    /* #title {
-      padding: 0;
-    } */
-
     #title-container {
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 15px;
       margin-top: 15px;
-      /* Space between the icon and the title */
     }
 
     #icon {
@@ -170,6 +167,38 @@
       border-radius: 30px;
     }
 
+    #pre-camera {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    #pre-camera-text {
+      color: white;
+      font-size: 10px;
+    }
+
+    #start-camera-button {
+      color: black;
+      font-family: Poppins, Montserrat, Arial, sans-serif;
+      font-size: 25px;
+      font-weight: 700;
+      background-color: white;
+      border-radius: 10px;
+      padding: 0 10px;
+      border: none;
+      cursor: pointer;
+    }
+
+    #start-camera-button:hover {
+      box-shadow: inset 10px 10px 25px rgba(0, 0, 0, 0.6);
+    }
+
+    #start-camera-button:active {
+      box-shadow: inset 10px 10px 25px rgba(0, 0, 0, 0.9);
+    }
+
     .slider-container {
       border: 2px solid var(--border-color);
       background-color: var(--slider-bg-color);
@@ -241,7 +270,9 @@
       box-shadow: inset 10px 10px 25px rgba(0, 0, 0, 0.6);
     }
 
-    a {
+    #links,
+    #links * {
+      font-size: 13px;
       color: var(--text-color);
       font-family: Poppins, Montserrat, Arial, sans-serif;
     }
@@ -288,6 +319,10 @@
       border: none;
       cursor: pointer;
     }
+
+    #pause-streak-button:hover {
+      box-shadow: var(--mild-shadow);
+    }
   </style>
 </head>
 
@@ -318,6 +353,12 @@
       <video id="video-element" autoplay playsinline></video>
       <canvas id="canvas-element"></canvas>
 
+      <div id="pre-camera">
+        <button id="start-camera-button">Start Camera</button>
+        <p id="pre-camera-text">This website runs entirely on your computer. You can even turn off wifi, and this
+          website will work.</p>
+      </div>
+
       <div id="streak-records-dropdown">
         <p id="streak-record-today">Today's Record: 0s</p>
         <p id="streak-record-week">This Week's Record: 0s</p>
@@ -326,7 +367,6 @@
         <p id="streak-record-allTime">All-Time Record: 0s</p>
         <button id="pause-streak-button">Pause Streak</button>
       </div>
-
     </div>
 
     <div class="slider-container">
@@ -345,7 +385,7 @@
 
     <button id="toggle-theme">Toggle Dark Mode</button>
 
-    <div>
+    <div id="links">
       <a href="https://github.com/JaredTweed" style="margin-top: 0;">github.com/JaredTweed</a>
       - <a href="https://www.linkedin.com/in/jared-tweed/" style="margin-top: 0;">linkedin.com/in/jared-tweed/</a>
     </div>
@@ -355,6 +395,7 @@
 
   <style>
     #loading-spinner {
+      display: none;
       width: 50px;
       height: 50px;
       border: 5px solid #f3f3f3;
@@ -383,6 +424,17 @@
       /* Hide the video initially */
     }
   </style>
+
+  <script>
+    document.getElementById('start-camera-button').addEventListener('click', () => {
+      document.getElementById('loading-spinner').style.display = 'block';
+      document.getElementById('pre-camera').style.display = 'none';
+      setTimeout(() => {
+        document.getElementById('mobile-phone-loading-screen').style.display = "block";
+      }, 6000);
+      initializeCamera();
+    });
+  </script>
 
   <script> // Streak Display and Storage
     // Initialize records from localStorage
@@ -502,13 +554,58 @@
     let streakIsCounting = null; // Interval to count streak time
     let streakIsDying = null; // Timeout for tracking continuous breaks
     let killStreakInitTime = null;
-    let steakIsDead = false;
+    let streakIsDead = false;
+    self.cameraStarted = false;
     const bar = document.getElementById('streak-break-bar');
     const pauseButton = document.getElementById('pause-streak-button');
     bar.style.width = '100%';
 
     // Settings
     const allowKillStreakDuringPause = true;
+
+    document.getElementById('pause-streak-button').addEventListener('click', () => {
+      if (isPaused == true) {
+        console.log('pause-to-play');
+        isPaused = false;
+        if (!streakIsDead && self.cameraStarted) { playStreak(); }
+        if (self.handDetected == true) { killStreak(); }
+
+        // Update the display
+        console.log('pause-to-play2');
+        pauseButton.textContent = 'Pause Streak';
+        document.getElementById('streak-display').textContent = `Streak: ${formatTime(streakCounter)}`;
+      } else {
+        console.log('play-to-pause');
+        isPaused = true;
+        pauseStreak();
+
+        // Update the display
+        pauseButton.textContent = 'Play Streak';
+        document.getElementById('streak-display').textContent = `Streak Paused: ${formatTime(streakCounter)}`;
+      }
+    });
+
+    function playStreak() {
+      // Start streak interval if not already running
+      if (!streakIsCounting) {
+        streakIsCounting = setInterval(() => {
+          streakCounter++; // Increment streak counter
+          document.getElementById('streak-display').textContent = formatStreak(streakCounter);
+          updateRecords(streakCounter); // Update streak records (daily, monthly, yearly)
+        }, 1000); // Update every second
+      }
+    }
+
+    function pauseStreak() {
+      // Pause the streak
+      if (streakIsCounting) {
+        clearInterval(streakIsCounting);
+        streakIsCounting = null;
+      }
+
+      // Clear any active timeout
+      if (!allowKillStreakDuringPause) reviveStreak();
+    }
 
     function killStreak(delay = 1200) {
       if (isPaused && !allowKillStreakDuringPause) { return; }
@@ -542,49 +639,6 @@
       }, 50);
     }
 
-    document.getElementById('pause-streak-button').addEventListener('click', () => {
-      if (isPaused == true) {
-        isPaused = false;
-        if (!streakIsDead) { playStreak(); } // The streak will not be dead if the 
-        if (self.handDetected == true) { killStreak(); }
-
-        // Update the display
-        pauseButton.textContent = 'Pause Streak';
-        document.getElementById('streak-display').textContent = `Streak: ${formatTime(streakCounter)}`;
-      } else {
-        isPaused = true;
-        pauseStreak();
-
-        // Update the display
-        pauseButton.textContent = 'Play Streak';
-        document.getElementById('streak-display').textContent = `Streak Paused: ${formatTime(streakCounter)}`;
-      }
-    });
-
-
-
-    function playStreak() {
-      // Start streak interval if not already running
-      if (!streakIsCounting) {
-        streakIsCounting = setInterval(() => {
-          streakCounter++; // Increment streak counter
-          document.getElementById('streak-display').textContent = formatStreak(streakCounter);
-          updateRecords(streakCounter); // Update streak records (daily, monthly, yearly)
-        }, 1000); // Update every second
-      }
-    }
-
-    function pauseStreak() {
-      // Pause the streak
-      if (streakIsCounting) {
-        clearInterval(streakIsCounting);
-        streakIsCounting = null;
-      }
-
-      // Clear any active timeout
-      if (!allowKillStreakDuringPause) reviveStreak();
-    }
-
     function reviveStreak() {
       streakIsDead = false;
       bar.style.width = '100%';
@@ -594,7 +648,6 @@
       }
       if (!isPaused) { playStreak(); }
     }
-
   </script>
 
   <script>
@@ -635,10 +688,6 @@
         console.error("Error processing donation action:", error);
       }
     });
-
-    setTimeout(() => {
-      document.getElementById('mobile-phone-loading-screen').style.display = "block";
-    }, 6000);
   </script>
 
   <script>
@@ -781,6 +830,7 @@
     self.handDetected = false;
     let processing = false;
     let videoInitializedSuccessfully = false;
+    let cameraErrorRecieved = false;
 
     function onResults(results) {
       // Update the canvas with the latest frame
@@ -837,10 +887,14 @@
           document.getElementById('mobile-phone-loading-screen').style.display = "none";
           videoInitializedSuccessfully = true;
         }
+        self.cameraStarted = true;
         processing = false;
       } catch (error) {
         console.error("MediaPipe Hands processing failed:", error);
-        alert("This website is currently not functional on many mobile devices; especially if running several apps simultaneously. For the best experience, please use a laptop or desktop.");
+        if (!cameraErrorRecieved) {
+          cameraErrorRecieved = true;
+          alert("This website is currently not functional on many mobile devices; especially if running several apps simultaneously. For the best experience, please use a laptop or desktop.");
+        }
       }
     }
 
@@ -856,12 +910,12 @@
         reviveStreak();
       } catch (error) {
         document.getElementById('loading-spinner').style.display = "none";
+        cameraErrorRecieved = true;
         alert("Cannot access the camera! It may be in use by another application or browser. \n\nSolution 1: If the camera is being used in another browser, please open that tab in this browser so they can run simultaneously.\n\nSolution 2: Close any other programs or browser tabs that might be using the camera, then try again.")
       }
 
       setInterval(() => processFrame(), 50); // Start processing with dynamic adjustment
     }
-    initializeCamera();
 
     // Adjust canvas size to match video size
     videoElement.addEventListener('loadedmetadata', () => {
