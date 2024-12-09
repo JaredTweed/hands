@@ -156,6 +156,7 @@
       border-radius: 30px;
       object-fit: cover;
       display: none;
+      transform: scaleX(-1);
     }
 
     #canvas-element {
@@ -165,6 +166,7 @@
       width: 100%;
       height: 100%;
       border-radius: 30px;
+      transform: scaleX(-1);
     }
 
     #pre-camera {
@@ -599,7 +601,7 @@
       if (!allowKillStreakDuringPause) reviveStreak();
     }
 
-    function killStreak(delay = 1200) {
+    function killStreak(delay = 1100) {
       if (isPaused && !allowKillStreakDuringPause) { return; }
 
       // Avoid setting a new timeout if a unrevived one already exists (i.e., if the streak is dying or dead)
