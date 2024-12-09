@@ -355,8 +355,7 @@
 
       <div id="pre-camera">
         <button id="start-camera-button">Start Camera</button>
-        <p id="pre-camera-text">This website runs entirely on your computer. You can even turn off wifi, and this
-          website will work.</p>
+        <p id="pre-camera-text"></p>
       </div>
 
       <div id="streak-records-dropdown">
@@ -865,10 +864,9 @@
 
     // Initialize hands module on page load
     window.addEventListener('DOMContentLoaded', async () => {
-      console.log("Initializing MediaPipe Hands...");
       try {
         await hands.initialize(); // Pre-download and prepare the model files
-        console.log("MediaPipe Hands initialized successfully.");
+        document.getElementById('pre-camera-text').innerText = 'This website runs entirely on your computer. You can even turn off wifi now, and this website will work.';
       } catch (error) {
         console.error("Failed to initialize MediaPipe Hands:", error);
       }
