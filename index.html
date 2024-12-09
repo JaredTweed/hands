@@ -168,6 +168,9 @@
     }
 
     #pre-camera {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
       position: absolute;
       top: 50%;
       left: 50%;
@@ -176,7 +179,8 @@
 
     #pre-camera-text {
       color: white;
-      font-size: 10px;
+      font-size: 11px;
+      margin: 3px;
     }
 
     #start-camera-button {
@@ -866,7 +870,7 @@
     window.addEventListener('DOMContentLoaded', async () => {
       try {
         await hands.initialize(); // Pre-download and prepare the model files
-        document.getElementById('pre-camera-text').innerText = 'This website runs entirely on your computer. You can even turn off wifi now, and this website will work.';
+        document.getElementById('pre-camera-text').innerText = 'This website is ready to run offline.';
       } catch (error) {
         console.error("Failed to initialize MediaPipe Hands:", error);
       }
