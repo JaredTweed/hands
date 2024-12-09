@@ -425,17 +425,6 @@
     }
   </style>
 
-  <script>
-    document.getElementById('start-camera-button').addEventListener('click', () => {
-      document.getElementById('loading-spinner').style.display = 'block';
-      document.getElementById('pre-camera').style.display = 'none';
-      setTimeout(() => {
-        document.getElementById('mobile-phone-loading-screen').style.display = "block";
-      }, 6000);
-      initializeCamera();
-    });
-  </script>
-
   <script> // Streak Display and Storage
     // Initialize records from localStorage
     const initializeRecords = () => {
@@ -547,7 +536,6 @@
   </script>
 
   <script> // Streak Tracking
-
     // Starting variables
     let isPaused = false;
     let streakCounter = 0; // Variable to track the streak count
@@ -848,8 +836,7 @@
         }
 
         for (const landmarks of results.multiHandLandmarks) {
-          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS,
-            { color: '#000000', lineWidth: 3 });
+          drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: '#000000', lineWidth: 3 });
           drawLandmarks(canvasCtx, landmarks, { color: '#000000', radius: 2 });
         }
       } else { // No hands detected
@@ -876,6 +863,17 @@
       minTrackingConfidence: 0.7
     });
 
+    // Initialize hands module on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+      console.log("Initializing MediaPipe Hands...");
+      try {
+        await hands.initialize(); // Pre-download and prepare the model files
+        console.log("MediaPipe Hands initialized successfully.");
+      } catch (error) {
+        console.error("Failed to initialize MediaPipe Hands:", error);
+      }
+    });
+
     hands.onResults(onResults);
 
     async function processFrame() {
@@ -899,14 +897,10 @@
     }
 
     async function initializeCamera() {
-      // console.log("1--")
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        // console.log("2--")
         videoElement.srcObject = stream;
-        // console.log("3--")
         videoElement.play();
-        // console.log("4--")
         reviveStreak();
       } catch (error) {
         document.getElementById('loading-spinner').style.display = "none";
@@ -929,16 +923,15 @@
       canvasElement.height = videoElement.videoHeight;
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log("Preloading MediaPipe Hands resources...");
-      // Preload MediaPipe resources by sending a dummy image
-      const dummyImage = new Image();
-      dummyImage.src = canvasElement.toDataURL(); // Create a blank image
-      hands.send({ image: dummyImage }).catch((error) => console.error("Error preloading MediaPipe Hands:", error));
-      console.log("MediaPipe Hands Initialized");
+    document.getElementById('start-camera-button').addEventListener('click', () => {
+      document.getElementById('loading-spinner').style.display = 'block';
+      document.getElementById('pre-camera').style.display = 'none';
+      setTimeout(() => {
+        document.getElementById('mobile-phone-loading-screen').style.display = "block";
+      }, 6000);
+      initializeCamera();
     });
   </script>
-
 
 </body>
 
