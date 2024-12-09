@@ -928,6 +928,15 @@
       canvasElement.width = videoElement.videoWidth;
       canvasElement.height = videoElement.videoHeight;
     });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log("Preloading MediaPipe Hands resources...");
+      // Preload MediaPipe resources by sending a dummy image
+      const dummyImage = new Image();
+      dummyImage.src = canvasElement.toDataURL(); // Create a blank image
+      hands.send({ image: dummyImage }).catch((error) => console.error("Error preloading MediaPipe Hands:", error));
+      console.log("MediaPipe Hands Initialized");
+    });
   </script>
 
 
