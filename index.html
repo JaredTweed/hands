@@ -170,23 +170,24 @@
     #pre-camera {
       display: flex;
       flex-direction: column;
-      gap: 0;
+      gap: 3px;
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
+      width: 250px;
     }
 
     #pre-camera-text {
       color: white;
-      font-size: 11px;
-      margin: 3px;
+      font-size: 12px;
+      margin: 0;
     }
 
     #start-camera-button {
       color: black;
       font-family: Poppins, Montserrat, Arial, sans-serif;
-      font-size: 25px;
+      font-size: 30px;
       font-weight: 700;
       background-color: white;
       border-radius: 10px;
@@ -870,7 +871,7 @@
     window.addEventListener('DOMContentLoaded', async () => {
       try {
         await hands.initialize(); // Pre-download and prepare the model files
-        document.getElementById('pre-camera-text').innerText = 'This website is ready to run offline.';
+        document.getElementById('pre-camera-text').innerText = 'This website is ready to run without Wi-Fi.';
       } catch (error) {
         console.error("Failed to initialize MediaPipe Hands:", error);
       }
