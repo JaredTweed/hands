@@ -220,10 +220,10 @@
 
     .slider {
       position: absolute;
-      left: 145px;
+      left: 80px;
       right: 68px;
       height: 8px;
-      bottom: 40%;
+      bottom: 42%;
       transform: translate(0, 50%);
       border-radius: 5px;
       outline: none;
@@ -234,11 +234,15 @@
     label {
       position: absolute;
       left: 10px;
+      top: 50%;
+      transform: translate(0, -50%);
     }
 
     .slider-value {
       position: absolute;
       right: 10px;
+      top: 50%;
+      transform: translate(0, -50%);
     }
 
     .slider-value,
@@ -382,12 +386,12 @@
     </div>
 
     <div class="slider-container">
-      <label for="pitch-slider">Pitch Frequency</label>
+      <label for="pitch-slider">Pitch</label>
       <input class="slider" type="range" id="pitch-slider" min="100" max="2500" value="440">
       <span class="slider-value" id="pitch-value">440 Hz</span>
     </div>
 
-    <button id="donate-button">Help Me Help You!<br>Donate to Keep This Running (be the first)</button>
+    <button id="donate-button">Please Donate to Keep This Running<br>(be the first)</button>
 
     <button id="toggle-theme">Toggle Dark Mode</button>
 
@@ -931,9 +935,9 @@
     document.getElementById('start-camera-button').addEventListener('click', () => {
       document.getElementById('loading-spinner').style.display = 'block';
       document.getElementById('pre-camera').style.display = 'none';
-      setTimeout(() => {
-        document.getElementById('mobile-phone-loading-screen').style.display = "block";
-      }, 6000);
+      // setTimeout(() => {
+      //   document.getElementById('mobile-phone-loading-screen').style.display = "block";
+      // }, 6000);
       initializeCamera();
     });
   </script>
